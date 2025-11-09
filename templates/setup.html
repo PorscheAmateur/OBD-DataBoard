@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OBD-II Setup</title>
+</head>
+<body>
+    <h1>OBD-II Setup</h1>
+    <form method="post" action="/setup">
+        <h2>Select Gauges:</h2>
+        {% for command in commands %}
+            <label>
+                <input type="checkbox" name="gauges" value="{{ command }}" {% if command in enabled_gauges %}checked{% endif %}>
+                {{ command }}
+            </label><br>
+        {% endfor %}
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>

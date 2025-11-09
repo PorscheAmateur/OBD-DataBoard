@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OBD-II Dashboard</title>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Live OBD-II Dashboard</h1>
+    <div id="gauges">
+        <!-- Gauges will be dynamically updated here -->
+    </div>
+    <script>
+        const socket = io();
+        socket.on('update', data => {
+            const gaugesDiv = document.getElementById('gauges');
+            gaugesDiv.innerHTML = '';
+            for (const [key, value] of Object.entries(data)) {
+                gaugesDiv.innerHTML += `<p>${key}: ${value}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
