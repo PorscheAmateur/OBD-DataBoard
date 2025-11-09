@@ -2,22 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OBD-II Dashboard</title>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <title>OBD Data Dashboard - Dynamic</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        .data { font-size: 3em; margin: 20px 0; transition: all 0.3s ease; }
+        .data span { color: #007BFF; }
+    </style>
 </head>
 <body>
-    <h1>Live OBD-II Dashboard</h1>
-    <div id="gauges">
-        <!-- Gauges will be dynamically updated here -->
-    </div>
+    <h1>OBD-II Dynamic Dashboard</h1>
+
+    <div class="data">RPM: <span id="rpm">--</span></div>
+    <div class="data">Speed: <span id="speed">--</span> km/h</div>
+    <div class="data">Coolant Temp: <span id="coolant">--</span> °C</div>
+
     <script>
         const socket = io();
-        socket.on('update', data => {
-            const gaugesDiv = document.getElementById('gauges');
-            gaugesDiv.innerHTML = '';
-            for (const [key, value] of Object.entries(data)) {
-                gaugesDiv.innerHTML += `<p>${key}: ${value}</p>`;
-            }
+
+        socket.on("obd_data", function(data) {
+            const rpmEl = document.getElementById("rpm");
+            const speedEl = document.getElementById("speed");
+            const coolantEl = document.getElementById("coolant");
+
+            rpmEl.textContent = data.rpm ?? "No Data";
+            speedEl.textContent = data.speed ?? "No Data";
+            coolantEl.textContent = data.coolant_temp ?? "No Data";
+
+            // simple color flash on change
+            [rpmEl, speedEl, coolantEl].forEach(el => {
+                el.style.color = "#28a745";
+                setTimeout(() => { el.style.color = "#007BFF"; }, 200);
+            });
         });
     </script>
 </body>

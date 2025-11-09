@@ -1,83 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Live OBD-II Dashboard</title>
+    <meta charset="UTF-8">
+    <title>OBD Data Dashboard - Gauges</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-gauge@1.0.0/dist/chartjs-gauge.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+        canvas { margin: 20px auto; display: block; }
+        .no-data-text { color: red; font-weight: bold; font-size: 1.2em; }
+    </style>
 </head>
 <body>
-    <h1>🚗 Live OBD-II Needle Dashboard</h1>
-    <div style="display:flex; flex-wrap: wrap;">
-        <canvas id="rpmGauge" width="250" height="250"></canvas>
-        <canvas id="speedGauge" width="250" height="250"></canvas>
-        <canvas id="coolantGauge" width="250" height="250"></canvas>
-        <canvas id="throttleGauge" width="250" height="250"></canvas>
-        <canvas id="fuelGauge" width="250" height="250"></canvas>
-    </div>
+    <h1>OBD-II Gauge Dashboard</h1>
+
+    <canvas id="rpmGauge" width="300" height="150"></canvas>
+    <div id="rpmNoData" class="no-data-text" style="display:none;">No Data</div>
+
+    <canvas id="speedGauge" width="300" height="150"></canvas>
+    <div id="speedNoData" class="no-data-text" style="display:none;">No Data</div>
+
+    <canvas id="coolantGauge" width="300" height="150"></canvas>
+    <div id="coolantNoData" class="no-data-text" style="display:none;">No Data</div>
 
     <script>
-        var socket = io();
+        const socket = io();
 
-        function createNeedleGauge(ctx, label, max, warning) {
+        function createGauge(ctx, label, max) {
             return new Chart(ctx, {
-                type: 'gauge',
+                type: 'doughnut',
                 data: {
+                    labels: [label, ''],
                     datasets: [{
-                        value: 0,
-                        data: [max],
-                        backgroundColor: ['green'],
-                        borderWidth: 2,
+                        data: [0, max],
+                        backgroundColor: ['#4caf50', '#ddd'],
+                        borderWidth: 1
                     }]
                 },
                 options: {
-                    responsive: false,
-                    title: {
-                        display: true,
-                        text: label
-                    },
-                    layout: {
-                        padding: 10
-                    },
-                    needle: {
-                        radiusPercentage: 2,
-                        widthPercentage: 3.2,
-                        lengthPercentage: 80,
-                        color: 'black'
-                    },
-                    valueLabel: {
-                        display: true,
-                        formatter: (val) => val.toFixed(1)
-                    },
+                    rotation: -90,
+                    circumference: 180,
+                    cutout: '70%',
                     plugins: {
-                        datalabels: { display: false }
-                    }
+                        legend: { display: false },
+                        tooltip: { enabled: false },
+                    },
                 }
             });
         }
 
-        // Create gauges
-        var rpmGauge = createNeedleGauge(document.getElementById('rpmGauge').getContext('2d'), 'RPM', 8000);
-        var speedGauge = createNeedleGauge(document.getElementById('speedGauge').getContext('2d'), 'Speed', 200);
-        var coolantGauge = createNeedleGauge(document.getElementById('coolantGauge').getContext('2d'), 'Coolant °C', 120);
-        var throttleGauge = createNeedleGauge(document.getElementById('throttleGauge').getContext('2d'), 'Throttle %', 100);
-        var fuelGauge = createNeedleGauge(document.getElementById('fuelGauge').getContext('2d'), 'Fuel %', 100);
+        const rpmChart = createGauge(document.getElementById('rpmGauge'), 'RPM', 8000);
+        const speedChart = createGauge(document.getElementById('speedGauge'), 'Speed', 200);
+        const coolantChart = createGauge(document.getElementById('coolantGauge'), 'Temp', 120);
 
-        socket.on('obd_data', function(data) {
-            rpmGauge.data.datasets[0].value = data.RPM;
-            rpmGauge.update();
+        function updateGauge(chart, value, max, noDataId) {
+            if (value === "No Data") {
+                document.getElementById(noDataId).style.display = 'block';
+                chart.data.datasets[0].data[0] = 0;
+            } else {
+                document.getElementById(noDataId).style.display = 'none';
+                chart.data.datasets[0].data[0] = value;
+            }
+            chart.update();
+        }
 
-            speedGauge.data.datasets[0].value = data.Speed;
-            speedGauge.update();
-
-            coolantGauge.data.datasets[0].value = data["Coolant Temp"];
-            coolantGauge.update();
-
-            throttleGauge.data.datasets[0].value = data.Throttle;
-            throttleGauge.update();
-
-            fuelGauge.data.datasets[0].value = data["Fuel Level"];
-            fuelGauge.update();
+        socket.on("obd_data", function(data) {
+            updateGauge(rpmChart, data.rpm, 8000, 'rpmNoData');
+            updateGauge(speedChart, data.speed, 200, 'speedNoData');
+            updateGauge(coolantChart, data.coolant_temp, 120, 'coolantNoData');
         });
     </script>
 </body>

@@ -1,66 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Live OBD-II Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+    <meta charset="UTF-8">
+    <title>OBD Data Dashboard</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        .data { font-size: 2em; margin: 10px 0; }
+    </style>
 </head>
 <body>
-    <h1>🚗 Live OBD-II Dashboard</h1>
-    <div style="display:flex; flex-wrap: wrap;">
-        <canvas id="rpmGauge" width="250" height="250"></canvas>
-        <canvas id="speedGauge" width="250" height="250"></canvas>
-        <canvas id="coolantGauge" width="250" height="250"></canvas>
-        <canvas id="throttleGauge" width="250" height="250"></canvas>
-        <canvas id="fuelGauge" width="250" height="250"></canvas>
-    </div>
+    <h1>OBD-II Dashboard</h1>
+
+    <div class="data">RPM: <span id="rpm">--</span></div>
+    <div class="data">Speed: <span id="speed">--</span> km/h</div>
+    <div class="data">Coolant Temp: <span id="coolant">--</span> °C</div>
 
     <script>
-        var socket = io();
+        const socket = io();
 
-        function createGauge(ctx, label, max) {
-            return new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: [label, ""],
-                    datasets: [{
-                        data: [0, max],
-                        backgroundColor: ['#ff6384', '#e0e0e0'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    rotation: 1 * Math.PI,
-                    circumference: 1 * Math.PI,
-                    plugins: {legend: {display: false}},
-                    responsive: false,
-                }
-            });
-        }
-
-        var rpmGauge = createGauge(document.getElementById('rpmGauge').getContext('2d'), 'RPM', 8000);
-        var speedGauge = createGauge(document.getElementById('speedGauge').getContext('2d'), 'Speed', 200);
-        var coolantGauge = createGauge(document.getElementById('coolantGauge').getContext('2d'), 'Coolant', 120);
-        var throttleGauge = createGauge(document.getElementById('throttleGauge').getContext('2d'), 'Throttle', 100);
-        var fuelGauge = createGauge(document.getElementById('fuelGauge').getContext('2d'), 'Fuel', 100);
-
-        socket.on('obd_data', function(data) {
-            rpmGauge.data.datasets[0].data[0] = data.RPM;
-            rpmGauge.update();
-
-            speedGauge.data.datasets[0].data[0] = data.Speed;
-            speedGauge.update();
-
-            coolantGauge.data.datasets[0].data[0] = data["Coolant Temp"];
-            coolantGauge.update();
-
-            throttleGauge.data.datasets[0].data[0] = data.Throttle;
-            throttleGauge.update();
-
-            fuelGauge.data.datasets[0].data[0] = data["Fuel Level"];
-            fuelGauge.update();
+        socket.on("obd_data", function(data) {
+            document.getElementById("rpm").textContent = data.rpm ?? "No Data";
+            document.getElementById("speed").textContent = data.speed ?? "No Data";
+            document.getElementById("coolant").textContent = data.coolant_temp ?? "No Data";
         });
     </script>
 </body>
 </html>
-
